@@ -1,0 +1,76 @@
+#!/bin/sh
+
+if [ "$3" = "" -o "$5" = "" -o "$6" = "" -o "$7" = "" ]; then
+  echo "Must be called via svn diff using --diff-cmd"
+  exit 10
+fi
+
+#echo "3 = $3"
+#echo "5 = $5"
+
+# Default TEMP dir
+if [ "$TEMP" = "" ]; then
+  TEMP=/tmp
+fi
+
+# Default diff command if it has not been specified by the user
+if [ "$DIFFCMD" = "" ]; then
+  DIFFCMD="diff"
+  DIFFCMD_CYGWIN=y
+fi
+
+OLDFILEPATH=`echo $3 | sed "s|\([^(]*\) (.*|\1|"`
+OLDREV_OR_URL=`echo $3 | sed "s|\([^(]*\) \([^)]*)\).*|\2|"`
+
+if [ "`echo $OLDREV_OR_URL | cut -c -10`" = "(revision " -o "`echo $OLDREV_OR_URL | cut -c -13`" = "(working copy"  ]; then
+  OLDREV=$OLDREV_OR_URL
+else
+  OLDREV=`echo $3 | sed "s|\([^(]*\) \([^)]*)\) \([^)]*)\)|\3|"`
+fi
+
+NEWFILEPATH=`echo $5 | sed "s|\([^(]*\) (.*|\1|"`
+NEWREV_OR_URL=`echo $5 | sed "s|\([^(]*\) \([^)]*)\).*|\2|"`
+
+if [ "`echo $NEWREV_OR_URL | cut -c -10`" = "(revision " -o "`echo $NEWREV_OR_URL | cut -c -13`" = "(working copy" ]; then
+  NEWREV=$NEWREV_OR_URL
+else    
+  NEWREV=`echo $5 | sed "s|\([^(]*\) \([^)]*)\) \([^)]*)\)|\3|"`
+fi
+
+#echo "OLDREV = $OLDREV"
+#echo "NEWREV = $NEWREV"
+
+# Strip the path from the filename, and add a hash to the beginning so temp files can be deleted easily
+OLD="$TEMP/#`echo $OLDFILEPATH | sed "s|.*/\(.*\)|\1|"` $OLDREV #LEFT#"
+NEW="$TEMP/#`echo $NEWFILEPATH | sed "s|.*/\(.*\)|\1|"` $NEWREV #RIGHT#"
+
+#echo "6 = $6"
+#echo "7 = $7"
+
+if [ "$OLDREV" = "(working copy)" ]; then
+  OLD="$6"
+else
+  # Strip the path from the filename, and add a hash to the beginning so temp files can be deleted easily
+  OLD="$TEMP/#`echo $OLDFILEPATH | sed "s|.*/\(.*\)|\1|"` $OLDREV #LEFT#"
+  cp -f "$6" "$OLD"
+fi
+
+if [ "$NEWREV" = "(working copy)" ]; then
+  NEW="$7"
+else
+  # Strip the path from the filename, and add a hash to the beginning so temp files can be deleted easily
+  # The LEFT and RIGHT are required because of an apparent bug -- when comparing file URLs, the revision numbers are shown as the same, even if they are different
+  NEW="$TEMP/#`echo $NEWFILEPATH | sed "s|.*/\(.*\)|\1|"` $NEWREV #RIGHT#"
+  cp -f "$7" "$NEW"
+fi
+
+#echo "OLD = $OLD"
+#echo "NEW = $NEW"
+
+# Change to windows-style paths if necessary
+if [ "$DIFFCMD_CYGWIN" = "n" ]; then
+  OLD=`cygpath -w "$OLD"`
+  NEW=`cygpath -w "$NEW"`
+fi
+
+"$DIFFCMD" "$OLD" "$NEW"

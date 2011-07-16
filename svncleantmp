@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Default TEMP dir
+if [ "$TEMP" = "" ]; then
+  TEMP=/tmp
+fi
+
+rm -fr "$TEMP"/#*

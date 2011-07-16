@@ -1,0 +1,19 @@
+#!/bin/sh
+
+### Generate informational output for all outstanding transactions in
+### a Subversion repository.
+
+SVNADMIN=svnadmin
+SVNLOOK=svnlook
+
+REPOS="${1}"
+if [ "x$REPOS" = x ] ; then
+  echo "usage: $0 REPOS_PATH"
+  exit
+fi
+
+for TXN in `${SVNADMIN} lstxns ${REPOS}`; do
+  echo "---[ Transaction ${TXN} ]-------------------------------------------"
+  ${SVNLOOK} info "${REPOS}" --transaction "${TXN}"
+done
+

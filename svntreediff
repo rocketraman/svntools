@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Default TEMP dir
+if [ "$TEMP" = "" ]; then
+  TEMP=/tmp
+fi
+
+OLD="$TEMP/#old"
+NEW="$TEMP/#new"
+
+rm -fr "$OLD" "$NEW"
+svn diff --diff-cmd svntreediff.perfile "$@"
+
+# Default diff command if it has not been specified by the user
+if [ "$DIFFCMD" = "" ]; then
+  DIFFCMD="diff"
+  DIFFCMD_CYGWIN=y
+fi
+
+# Change to windows-style paths if necessary
+if [ "$DIFFCMD_CYGWIN" = "n" ]; then
+  OLD=`cygpath -w "$OLD"`
+  NEW=`cygpath -w "$NEW"`
+fi
+
+"$DIFFCMD" "$OLD" "$NEW"

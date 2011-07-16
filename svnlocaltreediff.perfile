@@ -1,0 +1,68 @@
+#!/bin/sh
+
+if [ "$3" = "" -o "$5" = "" -o "$6" = "" -o "$7" = "" ]; then
+  echo "Must be called via svn diff using --diff-cmd"
+  exit 10
+fi
+
+#echo $3
+#echo $5
+
+# Default TEMP dir
+if [ "$TEMP" = "" ]; then
+  TEMP=/tmp
+fi
+
+OLDFILEPATH=`echo $3 | sed "s|\([^(]*\) (.*|\1|"`
+NEWFILEPATH=`echo $5 | sed "s|\([^(]*\) (.*|\1|"`
+
+#echo OLDFILEPATH = $OLDFILEPATH
+#echo NEWFILEPATH = $NEWFILEPATH
+
+OLDDIR="$TEMP/#old"
+NEWDIR="$TEMP/#new"
+
+# Strip the path from the filename
+if [ `expr index "$OLDFILEPATH" /` -gt 0 ]; then
+  OLDDIR=$OLDDIR/`echo $OLDFILEPATH | sed "s|\(.*\)/.*|\1|"`
+fi
+
+if [ `expr index "$NEWFILEPATH" /` -gt 0 ]; then
+  NEWDIR=$NEWDIR/`echo $NEWFILEPATH | sed "s|\(.*\)/.*|\1|"`
+fi
+
+#echo OLDDIR = $OLDDIR
+#echo NEWDIR = $NEWDIR
+
+mkdir -p "$OLDDIR"
+mkdir -p "$NEWDIR"
+
+# Strip the path from the filename, and the rev numbers, and concat with the DIR
+OLD="$OLDDIR/`echo $OLDFILEPATH | sed "s|.*/\(.*\)|\1|"`"
+NEW="$NEWDIR/`echo $NEWFILEPATH | sed "s|.*/\(.*\)|\1|"`"
+
+#echo OLD = $OLD
+#echo NEW = $NEW
+
+if [ -e "$6" ]; then
+  SIZEOFOLD=`ls -l "$6" | awk '{ print $5 }'`
+else
+  SIZEOFOLD=0
+fi
+
+SIZEOFNEW=`ls -l "$7" | awk '{ print $5 }'`
+
+#echo SIZEOFOLD = $SIZEOFOLD
+#echo SIZEOFNEW = $SIZEOFNEW
+
+#echo 6 = $6
+#echo 7 = $7
+
+# copy the tmp files created by svn to the values from above if they are not 0 size
+if [ $SIZEOFOLD -ne 0 ]; then
+  cp "$6" "$OLD"
+fi
+
+if [ $SIZEOFNEW -ne 0 ]; then
+  cp "$7" "$NEW"
+fi

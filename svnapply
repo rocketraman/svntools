@@ -1,0 +1,18 @@
+#!/bin/bash
+
+XARGS_ARGS="{}"
+
+if [ "$1" == "-I" ]
+then
+  XARGS_ARGS=
+  shift
+fi
+
+APPLY=$1
+shift
+
+if [ "$APPLY" = "?" ]; then
+  APPLY="\\?"
+fi
+
+svn st | egrep "^${APPLY}" | sed -e "s|^${APPLY}.\{6\}||" | xargs -I '{}' $@ $XARGS_ARGS

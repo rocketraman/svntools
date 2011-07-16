@@ -1,0 +1,72 @@
+Some useful tools that I wrote for svn. They are bash shell scripts that are wrappers around standard svn commands, but that make it much easier to accomplish several operations, especially diffs. To install simply execute:
+
+./install.sh
+
+By default this will install the programs to /usr/local/bin/. To use a different prefix, modify the install.sh script before execution.
+
+Note that you must edit each script and set the DIFFCMD and DIFFCMD_CYGWIN (if on cygwin) variables.
+
+A description of each script and its usage follows:
+
+
+svnapply
+==============================================================================
+This script takes the output of "svn status" and applies a command to each entry based on the status. For example, if svn status outputs:
+
+?    file1
+?    file2
+M    file3
+M    file4
+A    file5
+A    file6
+
+Then file1 and file2 are not controlled by svn, file3 and file4 have been locally modified, and file5 and file6 are to be added into version control. A common operation would be to add all files that are not currently version controlled, so instead of manually executing "svn add" on each of these files, simply execute:
+
+svnapply \? svn add
+
+Or to delete all files not under version control:
+
+svnapply \? rm
+
+Note that the "\" is required because the ? must be escaped from bash shell globbing. It is not required for other statuses such as "M" and "A".
+
+
+svnfilediff
+==============================================================================
+This script allows individual files to be diffed. It allows all forms of the "svn diff" (execute "svn help diff") command except the ones where the old or new targets are trees rather than individual files (for example, entire directories or revisions).
+
+To obtain the difference between a local file and the original unmodified version in the repository, execute
+
+svnfilediff path/to/modified/file
+
+To obtain the difference between a single file in the repository between specific revisions, for example revision 34 and revision 42, execute
+
+svnfilediff -r34:42 $REPO/project/trunk/path/to/file
+
+
+svnlocaltreediff
+==============================================================================
+This script allows all changes in a local tree (i.e. the entire codebase or a subdirectory) to be diffed against the original revisions of the corresponding files on the server.
+
+To obtain all differences between local source code and the original code, execute
+
+svnlocaltreediff path/to/project
+
+The path specified is relative to the current directory.
+
+Subdirectories may also be specified to diff specific parts of the codebase.
+
+
+svntreediff
+==============================================================================
+This script allows two remote trees to be diffed. For example, it is possible to say "give me a diff of all the changes between revision 45 and 67" by executing
+
+svntreediff -r45:67 $REPO/project/trunk
+
+You could also diff between revisions and tags. For example, to understand the difference between two releases:
+
+svntreediff $REPO/project/tags/r1 $REPO/project/tags/r2
+
+
+Authors:
+Raman Gupta <rocketraman@gmail.com>
